@@ -20,15 +20,23 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
 
-      - name: Restore icon
+      - name: Download and prepare StreamTokLive icon
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path assets | Out-Null
-          $base64 = (Get-Content -Raw -Encoding ASCII assets/icon.ico.b64).Trim()
-          [IO.File]::WriteAllBytes((Join-Path $PWD 'assets/icon.ico'), [Convert]::FromBase64String($base64))
-          if ((Get-Item assets/icon.ico).Length -lt 10000) { throw 'Icon restore failed' }
+          try {
+            Invoke-WebRequest -Uri 'https://streamtoklive.com/streamtoklive-icon.png' -OutFile 'assets/icon.png' -UseBasicParsing
+          } catch {
+            Invoke-WebRequest -Uri 'https://streamtoklive.com/favicon.png' -OutFile 'assets/icon.png' -UseBasicParsing
+          }
+          if ((Get-Item assets/icon.png).Length -lt 3000) { throw 'Downloaded StreamTokLive icon is unexpectedly small' }
+          if (-not (Get-Command magick -ErrorAction SilentlyContinue)) {
+            choco install imagemagick -y --no-progress
+            $env:PATH = [Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('PATH', 'User')
+          }
+          magick assets/icon.png -define icon:auto-resize=256,128,64,48,32,16 assets/icon.ico
+          if ((Get-Item assets/icon.ico).Length -lt 10000) { throw 'ICO conversion failed' }
 
       - name: Install dependencies
         shell: pwsh
