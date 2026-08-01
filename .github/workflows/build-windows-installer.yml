@@ -1,0 +1,71 @@
+name: Build Windows installer
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Download and prepare StreamTokLive icon
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path assets | Out-Null
+          try {
+            Invoke-WebRequest -Uri 'https://streamtoklive.com/streamtoklive-icon.png' -OutFile 'assets/icon.png' -UseBasicParsing
+          } catch {
+            Invoke-WebRequest -Uri 'https://streamtoklive.com/favicon.png' -OutFile 'assets/icon.png' -UseBasicParsing
+          }
+          if ((Get-Item assets/icon.png).Length -lt 3000) { throw 'Downloaded StreamTokLive icon is unexpectedly small' }
+          if (-not (Get-Command magick -ErrorAction SilentlyContinue)) {
+            choco install imagemagick -y --no-progress
+            $env:PATH = [Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('PATH', 'User')
+          }
+          magick assets/icon.png -define icon:auto-resize=256,128,64,48,32,16 assets/icon.ico
+          if ((Get-Item assets/icon.ico).Length -lt 10000) { throw 'ICO conversion failed' }
+
+      - name: Install dependencies
+        shell: pwsh
+        run: npm install --no-audit --no-fund
+
+      - name: Build NSIS installer
+        shell: pwsh
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npm run dist:win
+
+      - name: Verify artifact
+        shell: pwsh
+        run: |
+          $exe = 'dist/StreamTokLive-Setup-5.4.12-beta.2.exe'
+          if (-not (Test-Path $exe)) { throw "Installer not found: $exe" }
+          if ((Get-Item $exe).Length -lt 10000000) { throw 'Installer is unexpectedly small' }
+          $hash = (Get-FileHash -Algorithm SHA256 $exe).Hash
+          "$hash  StreamTokLive-Setup-5.4.12-beta.2.exe" | Set-Content -Encoding ASCII 'dist/StreamTokLive-Setup-5.4.12-beta.2.exe.sha256'
+          Get-Item $exe | Format-List FullName,Length
+          Write-Host "SHA-256: $hash"
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: StreamTokLive-Setup-5.4.12-beta.2
+          path: |
+            dist/StreamTokLive-Setup-5.4.12-beta.2.exe
+            dist/StreamTokLive-Setup-5.4.12-beta.2.exe.sha256
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0

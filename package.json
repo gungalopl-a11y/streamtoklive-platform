@@ -1,0 +1,64 @@
+{
+  "name": "streamtoklive-windows-launcher",
+  "productName": "StreamTokLive",
+  "version": "5.4.12-beta.2",
+  "private": true,
+  "type": "module",
+  "description": "Official StreamTokLive Windows launcher for streamtoklive.com",
+  "main": "src/main.mjs",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win nsis --x64"
+  },
+  "devDependencies": {
+    "electron": "43.2.0",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "com.streamtoklive.desktop",
+    "productName": "StreamTokLive",
+    "asar": true,
+    "compression": "maximum",
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "files": [
+      "src/**/*",
+      "assets/icon.ico",
+      "package.json"
+    ],
+    "win": {
+      "icon": "assets/icon.ico",
+      "executableName": "StreamTokLive",
+      "requestedExecutionLevel": "asInvoker",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "StreamTokLive-Setup-${version}.${ext}",
+      "legalTrademarks": "StreamTokLive"
+    },
+    "nsis": {
+      "include": "build/installer.nsh",
+      "oneClick": true,
+      "perMachine": true,
+      "displayLanguageSelector": false,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "StreamTokLive",
+      "uninstallDisplayName": "StreamTokLive",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico"
+    }
+  },
+  "author": {
+    "name": "StreamTokLive"
+  },
+  "copyright": "Copyright © 2026 StreamTokLive"
+}
