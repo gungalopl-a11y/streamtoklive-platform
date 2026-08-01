@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>StreamTokLive — сервер недоступен</title>
+  <style>
+    :root { color-scheme: dark; font-family: Inter, "Segoe UI", system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: radial-gradient(circle at top, #18253f 0, #080b12 52%); color: #f7f8fb; }
+    main { width: min(560px, calc(100% - 40px)); padding: 38px; border: 1px solid rgba(255,255,255,.11); border-radius: 24px; background: rgba(12,17,29,.9); box-shadow: 0 28px 80px rgba(0,0,0,.45); text-align: center; }
+    img { width: 88px; height: 88px; border-radius: 22px; margin-bottom: 16px; }
+    h1 { margin: 0 0 12px; font-size: 28px; }
+    p { margin: 0 auto 24px; max-width: 430px; color: #b8c0d2; line-height: 1.55; }
+    a { display: inline-flex; min-height: 46px; align-items: center; justify-content: center; padding: 0 24px; border-radius: 13px; color: #071018; background: #64e6a5; font-weight: 750; text-decoration: none; }
+    small { display: block; margin-top: 20px; color: #768096; }
+  </style>
+</head>
+<body>
+  <main>
+    <img src="../assets/icon.ico" alt="StreamTokLive">
+    <h1>Сервер временно недоступен</h1>
+    <p>Проверьте подключение к интернету и повторите попытку. Данные устройства и защищённая сессия сохранятся.</p>
+    <a id="retry" href="https://streamtoklive.com">Повторить подключение</a>
+    <small id="reason"></small>
+  </main>
+  <script>
+    const query = new URLSearchParams(location.search);
+    const target = query.get('target');
+    const reason = query.get('reason');
+    if (target) document.getElementById('retry').href = target;
+    if (reason) document.getElementById('reason').textContent = reason;
+  </script>
+</body>
+</html>
